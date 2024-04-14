@@ -32,6 +32,9 @@ class Emulator:
                 else:
                     self.text.append(insn)
             elif section == 'data':
+                if ':' not in line:
+                    continue
+
                 label, values = line.split(':')
 
                 self.data_labels[label.strip()] = data_pointer
@@ -91,6 +94,7 @@ class Emulator:
                     self.registers[insn[1]] = self.flag = self.data_labels[insn[2]]
             case 'stop':
                 self.stopped = True
+                self.ip -= 1
             case _:
                 print('unknown insn ' + insn[0])
 
@@ -112,7 +116,7 @@ def main(argv: List[str]):
         emu = Emulator(f.read())
     
     while True:
-        dbcmd = input('> ').split(' ')
+        dbcmd = input(f'{emu.line()} > ').split(' ')
 
         match dbcmd[0]:
             case 'help':
@@ -125,6 +129,8 @@ def main(argv: List[str]):
                     'd|data [start_addr [, n_bytes]]': 'Shows data',
                     'b|break addr': 'Toggle breakpoint',
                     'b|break': 'List breakpoints',
+                    'wr|writereg [register] [value]': 'Write register',
+                    'wd|writedata [data] [value]': 'Write data',
                     'ip': 'Shows ip',
                     'dis': 'Disassemble',
                     'exit': 'Exit',
@@ -139,7 +145,6 @@ def main(argv: List[str]):
                     steps = int(dbcmd[1])
                 
                 for i in range(steps):
-                    print(emu.line())
                     emu.step()
             case 'c' | 'continue':
                 emu.run()
@@ -151,11 +156,30 @@ def main(argv: List[str]):
             case 'f' | 'flag':
                 print(emu.flag)
             case 'd' | 'data':
-                start_addr = int(dbcmd[1]) if len(dbcmd) >= 2 else 0
+                try:
+                    start_addr = int(dbcmd[1]) if len(dbcmd) >= 2 else 0
+                except ValueError:
+                    start_addr = emu.data_labels[dbcmd[1]]
+
                 n_bytes = int(dbcmd[2]) if len(dbcmd) >= 3 else 10
                 
                 for i, x in enumerate(emu.data[start_addr:start_addr+n_bytes]):
                     print(f'{start_addr + i}: {x}')
+            case 'wr' | 'writeregister':
+                if len(dbcmd) != 3:
+                    break
+
+                emu.registers[dbcmd[1]] = int(dbcmd[2])
+            case 'wd' | 'writedata':
+                if len(dbcmd) != 3:
+                    break
+
+                try:
+                    addr = int(dbcmd[1])
+                except ValueError:
+                    addr = emu.data_labels[dbcmd[1]]
+
+                emu.data[addr] = int(dbcmd[2])
             case 'ip':
                 print(emu.ip)
             case 'dis':
