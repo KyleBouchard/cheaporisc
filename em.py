@@ -86,7 +86,7 @@ class Emulator:
             case 'ld':
                 self.registers[insn[1]] = self.flag = self.data[self.registers[insn[2].removeprefix('(').removesuffix(')')]]
             case 'st':
-                self.data[self.registers[insn[1].removeprefix('(').removesuffix(')')]] = flag = self.registers[insn[2]]
+                self.data[self.registers[insn[1].removeprefix('(').removesuffix(')')]] = self.flag = self.registers[insn[2]]
             case 'ldi':
                 try:
                     self.registers[insn[1]] = self.flag = int(insn[2])
