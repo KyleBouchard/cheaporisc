@@ -155,7 +155,7 @@ def main(argv: List[str]):
                 n_bytes = int(dbcmd[2]) if len(dbcmd) >= 3 else 10
                 
                 for i, x in enumerate(emu.data[start_addr:start_addr+n_bytes]):
-                    print(f'{i}: {x}')
+                    print(f'{start_addr + i}: {x}')
             case 'ip':
                 print(emu.ip)
             case 'dis':
